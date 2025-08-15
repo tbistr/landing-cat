@@ -2,7 +2,11 @@ import { AppShell, Button, Group, MantineProvider, Title } from "@mantine/core";
 import { createRoot } from "react-dom/client";
 
 import "@mantine/core/styles.css";
-import { BookmarkCard } from "@/bookmarks/BookmarkCard";
+import {
+	AddIconBookmarkCard,
+	BookmarkCard,
+	EditableBookmarkCard,
+} from "@/bookmarks/BookmarkCard";
 import { getBookmarks } from "@/bookmarks/store";
 import type { Bookmark } from "@/bookmarks/types";
 import { BookmarksGrid } from "./Grid";
@@ -62,6 +66,7 @@ const DEFAULT_LINKS: Bookmark[] = [
 
 function AppShellLayout() {
 	const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+	const [editable, setEditable] = useState(false);
 
 	useEffect(() => {
 		getBookmarks().then((items) => {
@@ -77,6 +82,10 @@ function AppShellLayout() {
 		setBookmarks([]);
 	};
 
+	const toggleEditable = () => {
+		setEditable((prev) => !prev);
+	};
+
 	return (
 		<div style={{ position: "relative" }}>
 			<AppShell
@@ -90,16 +99,40 @@ function AppShellLayout() {
 						<Group>
 							<Button onClick={setDefaultLinks}>Set Default Links</Button>
 							<Button onClick={removeDefaultLinks}>Remove Default Links</Button>
+							<Button onClick={toggleEditable}>
+								{editable ? "Disable Editing" : "Enable Editing"}
+							</Button>
 						</Group>
 					</Group>
 				</AppShell.Header>
 				<AppShell.Main style={{ background: "transparent" }}>
 					<div style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 12 }}>
-						<BookmarksGrid
-							bookmarkCardElements={bookmarks.map((item) => (
-								<BookmarkCard key={item.id} item={item} />
-							))}
-						/>
+						{editable ? (
+							<BookmarksGrid
+								bookmarkCardElements={[
+									...bookmarks.map((item) => (
+										<EditableBookmarkCard
+											key={item.id}
+											item={item}
+											onRemove={(id) => {}}
+											onUpdate={(id) => {}}
+										/>
+									)),
+									<AddIconBookmarkCard
+										key="add"
+										onClick={() => {
+											// Logic to add a new bookmark
+										}}
+									/>,
+								]}
+							/>
+						) : (
+							<BookmarksGrid
+								bookmarkCardElements={bookmarks.map((item) => (
+									<BookmarkCard key={item.id} item={item} />
+								))}
+							/>
+						)}
 					</div>
 				</AppShell.Main>
 			</AppShell>

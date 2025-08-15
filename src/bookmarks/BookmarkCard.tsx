@@ -1,12 +1,14 @@
-import { Card, Center, Image, Text } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { ActionIcon, Card, Center, Group, Image, Text } from "@mantine/core";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import type { Bookmark } from "./types";
 
-export interface BookmarkCardProps {
-	item: Bookmark;
-}
-
-const BookmarkCardBase = ({ children }: { children: React.ReactNode }) => {
+const BookmarkCardBase = ({
+	children,
+	onClick,
+}: {
+	children: React.ReactNode;
+	onClick?: () => void;
+}) => {
 	return (
 		<Card
 			shadow="md"
@@ -15,20 +17,24 @@ const BookmarkCardBase = ({ children }: { children: React.ReactNode }) => {
 			}}
 			w={200}
 			h={150}
-			component="a"
-			href="#"
+			onClick={onClick}
 		>
 			{children}
 		</Card>
 	);
 };
 
-export const BookmarkCard = (props: BookmarkCardProps) => {
+export const BookmarkCard = (props: { item: Bookmark }) => {
 	return (
 		<BookmarkCardBase>
-			<Card.Section p={0}>
-				<Center>
-					<Image src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png" />
+			<Card.Section p={0} h={100}>
+				<Center h="100%">
+					<Image
+						src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
+						fit="cover"
+						w="100%"
+						h="100%"
+					/>
 				</Center>
 			</Card.Section>
 
@@ -39,36 +45,70 @@ export const BookmarkCard = (props: BookmarkCardProps) => {
 	);
 };
 
-export interface EditableBookmarkCardProps {
+export const EditableBookmarkCard = (props: {
 	item: Bookmark;
 	onRemove: (id: string) => void;
 	onUpdate: (id: string) => void;
-}
-
-export const EditableBookmarkCard = () => {
+}) => {
 	return (
 		<BookmarkCardBase>
+			<Card.Section>
+				<Group
+					gap="xs"
+					style={{
+						position: "absolute",
+						top: 8,
+						right: 8,
+					}}
+				>
+					<ActionIcon
+						size="sm"
+						variant="filled"
+						onClick={(e) => {
+							e.stopPropagation();
+							props.onUpdate(props.item.id);
+						}}
+					>
+						<IconEdit size={14} />
+					</ActionIcon>
+					<ActionIcon
+						size="sm"
+						variant="filled"
+						color="pink"
+						onClick={(e) => {
+							e.stopPropagation();
+							props.onRemove(props.item.id);
+						}}
+					>
+						<IconTrash size={14} />
+					</ActionIcon>
+				</Group>
+			</Card.Section>
+
 			<Card.Section p={0}>
-				<Center>
-					<Image src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png" />
+				<Center h="100%">
+					<Image
+						src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
+						fit="cover"
+						w="100%"
+						h="100%"
+					/>
 				</Center>
 			</Card.Section>
 
 			<Card.Section p={10}>
-				<Text ta="center">Editable Bookmark</Text>
+				<Text ta="center">{props.item.title}</Text>
 			</Card.Section>
 		</BookmarkCardBase>
 	);
 };
 
-export const AddIconBookmarkCard = () => {
+export const AddIconBookmarkCard = (props: { onClick: () => void }) => {
 	return (
-		<BookmarkCardBase>
-			<Card.Section p={0}>
-				<Center>
-					<IconPlus />
-				</Center>
-			</Card.Section>
+		<BookmarkCardBase onClick={props.onClick}>
+			<Center h="100%">
+				<IconPlus size={64} />
+			</Center>
 		</BookmarkCardBase>
 	);
 };
