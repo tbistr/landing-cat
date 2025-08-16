@@ -30,9 +30,9 @@ export const BookmarkCard = (props: { item: Bookmark }) => {
 			<Card.Section p={0} h={100}>
 				<Center h="100%">
 					<Image
-						src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
-						fit="cover"
-						w="100%"
+						src={`https://www.google.com/s2/favicons?domain=${new URL(props.item.url).hostname}&sz=64`}
+						fallbackSrc="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
+						fit="contain"
 						h="100%"
 					/>
 				</Center>
@@ -85,12 +85,12 @@ export const EditableBookmarkCard = (props: {
 				</Group>
 			</Card.Section>
 
-			<Card.Section p={0}>
+			<Card.Section p={0} h={100}>
 				<Center h="100%">
 					<Image
-						src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
-						fit="cover"
-						w="100%"
+						src={`https://www.google.com/s2/favicons?domain=${new URL(props.item.url).hostname}&sz=64`}
+						fallbackSrc="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-4.png"
+						fit="contain"
 						h="100%"
 					/>
 				</Center>
