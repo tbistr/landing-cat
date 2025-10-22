@@ -1,15 +1,16 @@
-import { Button, Group, Title } from "@mantine/core";
+import { Button, Center, Group, Title } from "@mantine/core";
 
 import "@mantine/core/styles.css";
 
 import { SimpleGrid } from "@mantine/core";
 import type React from "react";
+import { useEffect, useState } from "react";
 import {
 	AddIconBookmarkCard,
 	BookmarkCard,
 	EditableBookmarkCard,
 } from "@/bookmarks/Card";
-import { getBookmarks } from "./store";
+import { getBookmarks, setBookmarks } from "./store";
 import type { Bookmark } from "./types";
 
 const DEFAULT_LINKS: Bookmark[] = [
@@ -76,25 +77,46 @@ export const BookmarksGrid = (props: {
 };
 
 export const BookmarkView = () => {
-	const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+	const [bookmarks, setBookmarksState] = useState<Bookmark[]>([]);
 	const [editable, setEditable] = useState(false);
 
 	useEffect(() => {
-		getBookmarks().then((items) => {
-			setBookmarks(items);
-		});
+		(async () => {
+			const items = await getBookmarks();
+			setBookmarksState(items);
+		})();
 	}, []);
-
-	const setDefaultLinks = async () => {
-		setBookmarks(DEFAULT_LINKS);
+	// ローカルstateを更新しつつ、ストレージへは裏で保存（awaitしない）
+	const save = (next: Bookmark[] | ((prev: Bookmark[]) => Bookmark[])) => {
+		setBookmarksState((prev) => {
+			const resolved = typeof next === "function" ? next(prev) : next;
+			setBookmarks(resolved).catch(console.error);
+			return resolved;
+		});
 	};
 
-	const removeDefaultLinks = async () => {
-		setBookmarks([]);
+	const setDefaultLinks = () => {
+		save(DEFAULT_LINKS);
 	};
 
-	const toggleEditable = () => {
-		setEditable((prev) => !prev);
+	const toggleEditable = () => setEditable((prev) => !prev);
+
+	const handleEditBookmark = (bookmark: Bookmark) => {
+		save((prev) =>
+			prev.map((b) =>
+				b.id === bookmark.id
+					? { ...b, title: bookmark.title, url: bookmark.url }
+					: b,
+			),
+		);
+	};
+
+	const handleDeleteBookmark = (bookmark: Bookmark) => {
+		save((prev) => prev.filter((b) => b.id !== bookmark.id));
+	};
+
+	const handleAddBookmark = (bookmark: Bookmark) => {
+		save((prev) => [...prev, bookmark]);
 	};
 
 	return (
@@ -103,13 +125,12 @@ export const BookmarkView = () => {
 				<Title order={4}>Bookmarks</Title>
 				<Group>
 					<Button onClick={setDefaultLinks}>Set Default Links</Button>
-					<Button onClick={removeDefaultLinks}>Remove Default Links</Button>
 					<Button onClick={toggleEditable}>
 						{editable ? "Disable Editing" : "Enable Editing"}
 					</Button>
 				</Group>
 			</Group>
-			<div style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 12 }}>
+			<Center p="md">
 				{editable ? (
 					<BookmarksGrid
 						bookmarkCardElements={[
@@ -117,16 +138,11 @@ export const BookmarkView = () => {
 								<EditableBookmarkCard
 									key={item.id}
 									item={item}
-									onRemove={(id) => {}}
-									onUpdate={(id) => {}}
+									onEdit={handleEditBookmark}
+									onDelete={handleDeleteBookmark}
 								/>
 							)),
-							<AddIconBookmarkCard
-								key="add"
-								onClick={() => {
-									// Logic to add a new bookmark
-								}}
-							/>,
+							<AddIconBookmarkCard key="add" onAdd={handleAddBookmark} />,
 						]}
 					/>
 				) : (
@@ -136,7 +152,7 @@ export const BookmarkView = () => {
 						))}
 					/>
 				)}
-			</div>
+			</Center>
 		</>
 	);
 };

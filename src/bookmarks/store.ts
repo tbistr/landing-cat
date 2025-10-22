@@ -10,5 +10,5 @@ export const getBookmarks = async (): Promise<Bookmark[]> => {
 };
 
 export const setBookmarks = async (bookmarks: Bookmark[]) => {
-	bookmarksItem.setValue(bookmarks);
+	return bookmarksItem.setValue(bookmarks);
 };
