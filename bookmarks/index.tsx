@@ -56,10 +56,16 @@ const DEFAULT_LINKS: Bookmark[] = [
 
 export const BookmarkView = () => {
 	return (
-		<>
+		<div className="grid grid-cols-5 gap-4 p-4 auto-rows-max w-5xl mx-auto">
 			{DEFAULT_LINKS.map((item) => (
-				<BookmarkCard key={item.id} />
+				<BookmarkCard
+					bookmark={{
+						...item,
+						imageUrl: `https://favicon.is/${item.url}?larger=true`,
+					}}
+					key={item.id}
+				/>
 			))}
-		</>
+		</div>
 	);
 };
