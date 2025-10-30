@@ -1,31 +1,31 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
+
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Bookmark } from "./types";
 
-export const BookmarkCard = (props: { bookmark: Bookmark }) => {
-	const handleClick = () => {
-		window.open(props.bookmark.url, "_blank");
-	};
-
+export const BookmarkCard = ({ bookmark }: { bookmark: Bookmark }) => {
 	return (
-		<Card
-			className="max-w-md cursor-pointer hover:shadow-md transition-shadow flex flex-col"
-			onClick={handleClick}
+		<a
+			href={bookmark.url}
+			target="_blank"
+			rel="noopener noreferrer"
+			aria-label={bookmark.title}
+			title={bookmark.title}
 		>
-			<CardContent className="pb-2 flex-1 flex flex-col">
-				{props.bookmark.imageUrl && (
-					<div className="w-full h-24 mb-2 rounded-md overflow-hidden">
+			<Card className={cn("py-4", "duration-150 hover:-translate-y-1")}>
+				<CardContent className="px-3">
+					<div className="flex items-center gap-2">
 						<img
-							src={props.bookmark.imageUrl}
-							alt={props.bookmark.title}
-							className="w-full h-full object-contain"
-							onError={(e) => {
-								e.currentTarget.style.display = "none";
-							}}
+							src={bookmark.imageUrl}
+							alt="favicon"
+							className="h-5 w-5"
+							loading="lazy"
 						/>
+						<p className="truncate font-medium">{bookmark.title}</p>
 					</div>
-				)}
-				<div className="text-center text-lg">{props.bookmark.title}</div>
-			</CardContent>
-		</Card>
+				</CardContent>
+			</Card>
+		</a>
 	);
 };
