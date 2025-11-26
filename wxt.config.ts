@@ -5,8 +5,11 @@ import { defineConfig } from "wxt";
 export default defineConfig({
 	modules: ["@wxt-dev/module-react"],
 
-	// @ts-ignore
 	vite: () => ({
 		plugins: [tailwindcss()],
 	}),
+
+	manifest: {
+		host_permissions: ["<all_urls>"],
+	},
 });
