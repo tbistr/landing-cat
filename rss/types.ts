@@ -4,7 +4,7 @@ export interface Subscription {
 	url: string;
 }
 
-export interface Feed {
+export interface Article {
 	id: string;
 	title: string;
 	url: string;

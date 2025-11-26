@@ -1,4 +1,4 @@
-import { addFetchFromBackgroundListener } from "@/rss/fetch";
+import { addFetchFromBackgroundListener } from "@/rss/query";
 
 export default defineBackground(() => {
 	addFetchFromBackgroundListener();

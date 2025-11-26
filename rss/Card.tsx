@@ -1,8 +1,16 @@
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Feed } from "./types";
+import { getOGP } from "./query";
+import type { Article } from "./types";
 
-export const FeedCard = ({ feed }: { feed: Feed }) => {
+export const FeedCard = ({ feed }: { feed: Article }) => {
+	const { data: ogpURL, isPending } = useQuery({
+		queryKey: ["ogp", feed.url],
+		queryFn: () => getOGP(feed.url),
+		staleTime: 1000 * 60 * 10, // 10分キャッシュ（OGPは頻繁に変わらない）
+	});
+
 	return (
 		<a
 			href={feed.url}
@@ -19,9 +27,13 @@ export const FeedCard = ({ feed }: { feed: Feed }) => {
 				)}
 			>
 				<CardContent className="p-0">
-					{feed.imageUrl && (
+					{isPending && (
+						<div className="aspect-video w-full bg-gray-100 animate-pulse" />
+					)}
+
+					{!isPending && ogpURL && (
 						<img
-							src={feed.imageUrl}
+							src={ogpURL}
 							alt={feed.title}
 							className="aspect-video w-full object-cover"
 							loading="lazy"

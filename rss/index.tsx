@@ -1,8 +1,8 @@
-import type { DeepPartial, Rss } from "feedsmith/types";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { FeedCard } from "./Card";
-import { fetchFromBackground } from "./fetch";
-import type { Subscription } from "./types";
+import { fetchFromBackground } from "./query";
+import type { Article, Subscription } from "./types";
 
 const SUBSCRIPTIONS: Subscription[] = [
 	{
@@ -17,20 +17,55 @@ const SUBSCRIPTIONS: Subscription[] = [
 	},
 ];
 
-export const RSSView = () => {
-	const [feeds, setFeeds] = useState<DeepPartial<Rss.Feed<string>>[]>([]);
-	useEffect(() => {
-		for (const sub of SUBSCRIPTIONS) {
-			fetchFromBackground(sub.url).then((f) => {
-				setFeeds((prev) => [...prev, f]);
-			});
-		}
-	}, []);
+const fetchFeeds = async (): Promise<
+	{ id: string; title: string; articles: Article[] }[]
+> => {
+	const feeds = await Promise.all(
+		SUBSCRIPTIONS.map(async (sub) => {
+			const data = await fetchFromBackground(sub.url);
 
-	return feeds.map(
-		(feed) =>
-			feed.items && (
-				<>
+			const articles: Article[] = (data?.items || []).map((item) => ({
+				id: item.title || "unknown",
+				title: item.title || "No Title",
+				url: item.link || "#",
+			}));
+
+			const feed = {
+				id: sub.id,
+				title: sub.title,
+				articles,
+			};
+
+			console.log("Fetched feed:", feed);
+			return feed;
+		}),
+	);
+
+	return feeds;
+};
+
+export const RSSView = () => {
+	const {
+		data: feeds = [],
+		isPending,
+		error,
+	} = useQuery({
+		queryKey: ["feeds"], // キャッシュキー
+		queryFn: fetchFeeds,
+	});
+
+	if (isPending) {
+		return <p className="p-4">読み込み中...</p>;
+	}
+
+	if (error) {
+		return <p className="p-4 text-red-500">フィードの取得に失敗しました</p>;
+	}
+
+	return (
+		<>
+			{feeds.map((feed) => (
+				<section key={feed.id}>
 					<p className="text-md">{feed.title} フィード一覧</p>
 					<div
 						className={cn(
@@ -38,19 +73,20 @@ export const RSSView = () => {
 							"grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4",
 						)}
 					>
-						{feed.items.map((item) => (
+						{feed.articles.map((item) => (
 							<FeedCard
 								feed={{
-									id: item.title || "unknown",
-									title: item.title || "No Title",
-									url: item.link || "#",
-									imageUrl: `https://favicon.is/${item.link}?larger=true`,
+									id: item.title,
+									title: item.title,
+									url: item.url,
+									imageUrl: `https://favicon.is/${item.url}?larger=true`,
 								}}
-								key={item.title || "unknown"}
+								key={item.id}
 							/>
 						))}
 					</div>
-				</>
-			),
+				</section>
+			))}
+		</>
 	);
 };
