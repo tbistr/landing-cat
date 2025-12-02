@@ -1,6 +1,4 @@
-import { ExternalLink } from "lucide-react";
-
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Bookmark } from "./types";
 
@@ -17,7 +15,7 @@ export const BookmarkCard = ({ bookmark }: { bookmark: Bookmark }) => {
 				<CardContent className="px-3">
 					<div className="flex items-center gap-2">
 						<img
-							src={bookmark.imageUrl}
+							src={`https://favicon.is/${bookmark.url}?larger=true`}
 							alt="favicon"
 							className="h-5 w-5"
 							loading="lazy"

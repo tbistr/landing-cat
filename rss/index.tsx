@@ -1,40 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/settings";
 import { FeedCard } from "./Card";
 import { fetchFromBackground } from "./query";
 import type { Article, Subscription } from "./types";
 
-const SUBSCRIPTIONS: Subscription[] = [
-	{
-		id: "1",
-		title: "BBC",
-		url: "https://feeds.bbci.co.uk/news/rss.xml",
-	},
-	{
-		id: "2",
-		title: "Zenn",
-		url: "https://zenn.dev/feed",
-	},
-];
-
-const fetchFeeds = async (): Promise<
-	{ id: string; title: string; articles: Article[] }[]
-> => {
+const fetchFeeds = async (
+	subs: Subscription[],
+): Promise<{ sub: Subscription; articles: Article[] }[]> => {
 	const feeds = await Promise.all(
-		SUBSCRIPTIONS.map(async (sub) => {
+		subs.map(async (sub) => {
 			const data = await fetchFromBackground(sub.url);
 
 			const articles: Article[] = (data?.items || []).map((item) => ({
-				id: item.title || "unknown",
 				title: item.title || "No Title",
 				url: item.link || "#",
 			}));
 
-			const feed = {
-				id: sub.id,
-				title: sub.title,
-				articles,
-			};
+			const feed = { sub, articles };
 
 			console.log("Fetched feed:", feed);
 			return feed;
@@ -46,16 +29,53 @@ const fetchFeeds = async (): Promise<
 
 export const RSSView = () => {
 	const {
+		settings,
+		loading: settingsLoading,
+		error: settingsError,
+	} = useSettingsStore();
+
+	const subscriptions = settings?.rssSubscriptions ?? [];
+	const {
 		data: feeds = [],
 		isPending,
 		error,
 	} = useQuery({
-		queryKey: ["feeds"], // キャッシュキー
-		queryFn: fetchFeeds,
+		queryKey: ["feeds", subscriptions], // 設定が変わったら再フェッチ
+		queryFn: () => fetchFeeds(subscriptions),
+		enabled: subscriptions.length > 0, // 購読がある場合のみ有効化
 	});
 
+	// 設定ロード状態のハンドリング（SWR っぽく）
+	if (settingsLoading) {
+		return <p className="p-4">設定を読み込み中...</p>;
+	}
+
+	if (settingsError) {
+		return (
+			<p className="p-4 text-red-500">
+				設定の読み込みに失敗しました: {settingsError}
+			</p>
+		);
+	}
+
+	if (!settings) {
+		return (
+			<p className="p-4">
+				RSS購読の設定がまだありません。設定画面から購読フィードを追加してください。
+			</p>
+		);
+	}
+
+	if (subscriptions.length === 0) {
+		return (
+			<p className="p-4">
+				購読中のフィードがありません。設定画面から追加してください。
+			</p>
+		);
+	}
+
 	if (isPending) {
-		return <p className="p-4">読み込み中...</p>;
+		return <p className="p-4">フィードを読み込み中...</p>;
 	}
 
 	if (error) {
@@ -65,23 +85,22 @@ export const RSSView = () => {
 	return (
 		<>
 			{feeds.map((feed) => (
-				<section key={feed.id}>
-					<p className="text-md">{feed.title} フィード一覧</p>
+				<section key={feed.sub.title}>
+					<p className="text-md">{feed.sub.title} フィード一覧</p>
 					<div
 						className={cn(
 							"p-4 max-w-6xl mx-auto",
-							"grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4",
+							"grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4",
 						)}
 					>
 						{feed.articles.map((item) => (
 							<FeedCard
 								feed={{
-									id: item.title,
 									title: item.title,
 									url: item.url,
 									imageUrl: `https://favicon.is/${item.url}?larger=true`,
 								}}
-								key={item.id}
+								key={item.url}
 							/>
 						))}
 					</div>
